@@ -30,7 +30,6 @@ class MainActivity : AppCompatActivity() {
             Log.w("MainActivity", "Cannot find toolbar")
         }
         setSupportActionBar(toolbar)
-
         handleIntent(intent)
     }
 
@@ -68,6 +67,11 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onQueryTextChange(newText: String?): Boolean {
+                    if (newText != null && newText.compareTo("") != 0) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                            this@MainActivity.handleSearch(newText)
+                        }
+                    }
                     return true
                 }
             })
@@ -90,37 +94,35 @@ class MainActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O_MR1)
     private fun getListOfSongs(searchString: String): List<Song> {
         val result = mutableListOf<Song>()
-        try {
-            val params = SQLiteDatabase.OpenParams.Builder()
-            val database = SQLiteDatabase.openDatabase(getDatabaseFile(), params.build())
-            val cursor = database.query(
-                "Song",
-                null,
-                "title LIKE ?",
-                arrayOf("%$searchString%"),
-                null,
-                null,
-                null
-            )
-            cursor.moveToFirst()
-            while (!cursor.isAfterLast) {
-                val titleIndex = cursor.getColumnIndex("title")
-                if (titleIndex < 0) {
-                    break
-                }
-                val lyricsIndex = cursor.getColumnIndex("lyrics")
-                if (lyricsIndex < 0) {
-                    break
-                }
-                val title = cursor.getString(titleIndex)
-                val lyrics = cursor.getString(lyricsIndex)
-                val song = Song(title, lyrics)
-                result.add(song)
-                cursor.moveToNext()
+        val params = SQLiteDatabase.OpenParams.Builder()
+        val database = SQLiteDatabase.openDatabase(getDatabaseFile(), params.build())
+        val cursor = database.query(
+            "Song",
+            null,
+            "title LIKE ?",
+            arrayOf("%$searchString%"),
+            null,
+            null,
+            null
+        )
+        cursor.moveToFirst()
+        while (!cursor.isAfterLast) {
+            val titleIndex = cursor.getColumnIndex("title")
+            if (titleIndex < 0) {
+                break
             }
-        } finally {
-            return result
+            val lyricsIndex = cursor.getColumnIndex("lyrics")
+            if (lyricsIndex < 0) {
+                break
+            }
+            val title = cursor.getString(titleIndex)
+            val lyrics = cursor.getString(lyricsIndex)
+            val song = Song(title, lyrics)
+            result.add(song)
+            cursor.moveToNext()
         }
+        database.close()
+        return result
     }
 
     private fun getDatabaseFile(): File {
