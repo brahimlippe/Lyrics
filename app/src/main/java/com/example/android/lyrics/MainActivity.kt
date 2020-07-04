@@ -55,6 +55,7 @@ class MainActivity : AppCompatActivity() {
         }
         val url = URL(getString(R.string.remote_database))
         val urlConnection: HttpURLConnection = url.openConnection() as HttpURLConnection
+        urlConnection.useCaches = false
         try {
             val inputStream: InputStream = BufferedInputStream(urlConnection.inputStream)
             val buffer = ByteArray(1024)
@@ -114,10 +115,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleSearch(searchString: String) {
+        val lyricsTextView = findViewById<TextView>(R.id.lyricsTextView)
+        val list = getListOfSongs(searchString)
         findViewById<RecyclerView>(R.id.result_list).apply {
             setHasFixedSize(true)
-            val lyricsTextView = findViewById<TextView>(R.id.lyricsTextView)
-            val list = getListOfSongs(searchString)
             adapter = RecyclerViewAdapter(lyricsTextView, list)
         }
     }
