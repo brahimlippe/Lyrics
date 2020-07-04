@@ -15,15 +15,18 @@ import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.RecyclerView
 import java.io.*
 import java.net.HttpURLConnection
+import java.net.InetAddress
 import java.net.URL
+import java.net.UnknownHostException
 import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
-    private val databasePath =
-        "${filesDir.absolutePath}${File.separatorChar}${getString(R.string.remote_database_name)}"
+    private lateinit var databasePath: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.i("MainActivity", "onCreate called")
+        databasePath =
+            "${filesDir.absolutePath}${File.separatorChar}${getString(R.string.remote_database_name)}"
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
@@ -34,10 +37,19 @@ class MainActivity : AppCompatActivity() {
         Log.i("MainActivity", "onCreate call finished")
     }
 
+    private fun isInternetAvailable(): Boolean {
+        try {
+            val address = InetAddress.getByName("www.google.com")
+            return !address.equals("")
+        } catch (e: UnknownHostException) {
+        }
+        return false
+    }
+
     private fun downloadDatabase(searchView: SearchView) {
         val databaseFile = File(databasePath)
         if (databaseFile.exists()) Log.i("MainActivity", "Database already exists")
-        if (databaseFile.exists() && !databaseFile.delete()) {
+        if (databaseFile.exists() && isInternetAvailable() && !databaseFile.delete()) {
             Log.e("MainActivity", "Cannot delete old database $databaseFile")
             return
         }
@@ -102,44 +114,52 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleSearch(searchString: String) {
-        val list = getListOfSongs(searchString)
-        val lyricsTextView = findViewById<TextView>(R.id.lyricsTextView)
         findViewById<RecyclerView>(R.id.result_list).apply {
             setHasFixedSize(true)
+            val lyricsTextView = findViewById<TextView>(R.id.lyricsTextView)
+            val list = getListOfSongs(searchString)
             adapter = RecyclerViewAdapter(lyricsTextView, list)
         }
     }
 
     private fun getListOfSongs(searchString: String): List<Song> {
         val result = mutableListOf<Song>()
-        val database = SQLiteDatabase.openDatabase(
-            databasePath,
-            null,
-            SQLiteDatabase.OPEN_READONLY
-        )
-        val cursor = database.query(
-            "Song",
-            null,
-            "title LIKE ?",
-            arrayOf("%$searchString%"),
-            null,
-            null,
-            null
-        )
-        cursor.moveToFirst()
-        while (!cursor.isAfterLast) {
-            val titleIndex = cursor.getColumnIndex("title")
-            if (titleIndex < 0) break
-            val lyricsIndex = cursor.getColumnIndex("lyrics")
-            if (lyricsIndex < 0) break
-            val title = cursor.getString(titleIndex)
-            val lyrics = cursor.getString(lyricsIndex)
-            val song = Song(title, lyrics)
-            result.add(song)
-            cursor.moveToNext()
+        try {
+            val database = SQLiteDatabase.openDatabase(
+                databasePath,
+                null,
+                SQLiteDatabase.OPEN_READONLY
+            )
+            val cursor = database.query(
+                "Song",
+                null,
+                "title LIKE ?",
+                arrayOf("%$searchString%"),
+                null,
+                null,
+                null
+            )
+            cursor.moveToFirst()
+            while (!cursor.isAfterLast) {
+                val titleIndex = cursor.getColumnIndex("title")
+                if (titleIndex < 0) break
+                val lyricsIndex = cursor.getColumnIndex("lyrics")
+                if (lyricsIndex < 0) break
+                val title = cursor.getString(titleIndex)
+                val lyrics = cursor.getString(lyricsIndex)
+                val song = Song(title, lyrics)
+                result.add(song)
+                cursor.moveToNext()
+            }
+            cursor.close()
+            database.close()
+        } catch (e: Throwable) {
+            showError(getString(R.string.database_connection_error))
         }
-        cursor.close()
-        database.close()
         return result
+    }
+
+    private fun showError(error: String) {
+        findViewById<TextView>(R.id.lyricsTextView).text = error
     }
 }

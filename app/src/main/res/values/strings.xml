@@ -3,4 +3,5 @@
     <string name="search_text_hint">البحث</string>
     <string name="remote_database">https://github.com/brahimlippe/Lyrics/blob/master/app/src/main/assets/songs.sqlite?raw=true</string>
     <string name="remote_database_name">songs.sqlite</string>
+    <string name="database_connection_error">تعطل الاتصال بمخزن البيانات</string>
 </resources>
