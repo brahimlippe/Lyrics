@@ -4,23 +4,24 @@ import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
+import android.view.View
 import android.widget.SearchView
 import android.widget.TextView
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.RecyclerView
-import java.io.File
-import java.io.FileOutputStream
-import java.io.InputStream
-import java.io.OutputStream
+import java.io.*
+import java.net.HttpURLConnection
+import java.net.URL
+import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
-    @RequiresApi(Build.VERSION_CODES.O_MR1)
+    private val databasePath =
+        "${filesDir.absolutePath}${File.separatorChar}${getString(R.string.remote_database_name)}"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.i("MainActivity", "onCreate called")
         super.onCreate(savedInstanceState)
@@ -30,24 +31,45 @@ class MainActivity : AppCompatActivity() {
             Log.w("MainActivity", "Cannot find toolbar")
         }
         setSupportActionBar(toolbar)
-        handleIntent(intent)
+        Log.i("MainActivity", "onCreate call finished")
     }
 
-    @RequiresApi(Build.VERSION_CODES.O_MR1)
+    private fun downloadDatabase(searchView: SearchView) {
+        val databaseFile = File(databasePath)
+        if (databaseFile.exists()) Log.i("MainActivity", "Database already exists")
+        if (databaseFile.exists() && !databaseFile.delete()) {
+            Log.e("MainActivity", "Cannot delete old database $databaseFile")
+            return
+        }
+        val url = URL(getString(R.string.remote_database))
+        val urlConnection: HttpURLConnection = url.openConnection() as HttpURLConnection
+        try {
+            val inputStream: InputStream = BufferedInputStream(urlConnection.inputStream)
+            val buffer = ByteArray(1024)
+            val output: OutputStream = FileOutputStream(databaseFile)
+            var nBytesRead: Int
+            var total = 0
+            while (inputStream.read(buffer, 0, 1024).also { nBytesRead = it } > 0) {
+                output.write(buffer, 0, nBytesRead)
+                total += nBytesRead
+            }
+            Log.i("MainActivity", "Writing $total bytes in ${databaseFile.absolutePath}")
+            output.flush()
+            output.close()
+            inputStream.close()
+            Log.i("MainActivity", "Finished download")
+            searchView.visibility = View.VISIBLE
+        } catch (e: Throwable) {
+            Log.w("MainActivity", e.toString())
+        } finally {
+            urlConnection.disconnect()
+        }
+    }
+
     override fun onNewIntent(intent: Intent) {
         Log.i("MainActivity", "onNewIntent called")
         super.onNewIntent(intent)
-        handleIntent(intent)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O_MR1)
-    private fun handleIntent(intent: Intent) {
-        if (intent.action == Intent.ACTION_SEARCH) {
-            val searchString = intent.getStringExtra(SearchManager.QUERY)
-            if (searchString != null && searchString.compareTo("") != 0) {
-                handleSearch(searchString)
-            }
-        }
+        TODO("Not yet implemented")
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -55,10 +77,8 @@ class MainActivity : AppCompatActivity() {
         Log.i("MainActivity", "Add search menu to action bar")
         val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
         if (menu != null) {
-            Log.i("MainActivity", "Setting searchable info")
             val searchView = menu.findItem(R.id.search).actionView as SearchView
             searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                @RequiresApi(Build.VERSION_CODES.O_MR1)
                 override fun onQueryTextSubmit(query: String?): Boolean {
                     if (query != null) {
                         this@MainActivity.handleSearch(query)
@@ -68,19 +88,19 @@ class MainActivity : AppCompatActivity() {
 
                 override fun onQueryTextChange(newText: String?): Boolean {
                     if (newText != null && newText.compareTo("") != 0) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-                            this@MainActivity.handleSearch(newText)
-                        }
+                        this@MainActivity.handleSearch(newText)
                     }
                     return true
                 }
             })
             searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
+            thread {
+                downloadDatabase(menu.findItem(R.id.search).actionView as SearchView)
+            }
         }
         return super.onCreateOptionsMenu(menu)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O_MR1)
     private fun handleSearch(searchString: String) {
         val list = getListOfSongs(searchString)
         val lyricsTextView = findViewById<TextView>(R.id.lyricsTextView)
@@ -90,12 +110,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-    @RequiresApi(Build.VERSION_CODES.O_MR1)
     private fun getListOfSongs(searchString: String): List<Song> {
         val result = mutableListOf<Song>()
-        val params = SQLiteDatabase.OpenParams.Builder()
-        val database = SQLiteDatabase.openDatabase(getDatabaseFile(), params.build())
+        val database = SQLiteDatabase.openDatabase(
+            databasePath,
+            null,
+            SQLiteDatabase.OPEN_READONLY
+        )
         val cursor = database.query(
             "Song",
             null,
@@ -108,41 +129,17 @@ class MainActivity : AppCompatActivity() {
         cursor.moveToFirst()
         while (!cursor.isAfterLast) {
             val titleIndex = cursor.getColumnIndex("title")
-            if (titleIndex < 0) {
-                break
-            }
+            if (titleIndex < 0) break
             val lyricsIndex = cursor.getColumnIndex("lyrics")
-            if (lyricsIndex < 0) {
-                break
-            }
+            if (lyricsIndex < 0) break
             val title = cursor.getString(titleIndex)
             val lyrics = cursor.getString(lyricsIndex)
             val song = Song(title, lyrics)
             result.add(song)
             cursor.moveToNext()
         }
+        cursor.close()
         database.close()
         return result
-    }
-
-    private fun getDatabaseFile(): File {
-        val fileName = "MySQLiteDB.db"
-        val file = getDatabasePath(fileName)
-        if (!file.exists()) {
-            val parentFile = file.parentFile
-            if (parentFile != null && !parentFile.exists()) {
-                parentFile.mkdir()
-            }
-            val inputStream: InputStream = assets.open("songs.sqlite")
-            val outputStream: OutputStream = FileOutputStream(file)
-            val buffer = ByteArray(1024 * 8)
-            var numOfBytesToRead: Int
-            while (inputStream.read(buffer)
-                    .also { numOfBytesToRead = it } > 0
-            ) outputStream.write(buffer, 0, numOfBytesToRead)
-            inputStream.close()
-            outputStream.close()
-        }
-        return file
     }
 }
