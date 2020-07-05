@@ -22,8 +22,7 @@
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/toolbar"
-            app:layout_constraintVertical_bias="0.26" />
+            app:layout_constraintTop_toBottomOf="@+id/toolbar" />
 
         <ScrollView
             android:layout_width="0dp"
@@ -32,7 +31,6 @@
             android:scrollbars="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toEndOf="@+id/result_list"
             app:layout_constraintTop_toBottomOf="@+id/toolbar">
 
@@ -40,12 +38,12 @@
                 android:id="@+id/lyricsTextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="16dp"
                 android:fontFamily="@font/amiri"
                 android:paddingLeft="24dp"
                 android:paddingRight="24dp"
                 android:paddingBottom="8dp"
                 android:text="@{lyricsViewModel.lyrics}"
+                android:textAlignment="center"
                 android:textSize="16sp"
                 tools:text="@tools:sample/lorem/random" />
         </ScrollView>
