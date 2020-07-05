@@ -1,5 +1,6 @@
 package com.example.android.lyrics
 
+import android.app.Activity
 import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
@@ -8,6 +9,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.SearchView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -19,6 +21,7 @@ import java.net.InetAddress
 import java.net.URL
 import java.net.UnknownHostException
 import kotlin.concurrent.thread
+
 
 class MainActivity : AppCompatActivity() {
     private lateinit var databasePath: String
@@ -119,7 +122,12 @@ class MainActivity : AppCompatActivity() {
         val list = getListOfSongs(searchString)
         findViewById<RecyclerView>(R.id.result_list).apply {
             setHasFixedSize(true)
-            adapter = RecyclerViewAdapter(lyricsTextView, list)
+            adapter = RecyclerViewAdapter(lyricsTextView, list) {
+                Log.i("MainActivity", "Hiding keyboard")
+                var view: View = currentFocus ?: View(applicationContext)
+                val imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.hideSoftInputFromWindow(view.windowToken, 0)
+            }
         }
     }
 
