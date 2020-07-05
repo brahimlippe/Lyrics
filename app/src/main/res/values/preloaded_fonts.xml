@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="preloaded_fonts" translatable="false">
+        <item>@font/</item>
+        <item>@font/amiri</item>
+        <item>@font/aref_ruqaa</item>
+        <item>@font/reem_kufi</item>
+    </array>
+</resources>

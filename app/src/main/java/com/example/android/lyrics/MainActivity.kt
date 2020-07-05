@@ -54,7 +54,9 @@ class MainActivity : AppCompatActivity() {
     private fun downloadDatabase(searchView: SearchView) {
         val databaseFile = File(databasePath)
         if (databaseFile.exists()) Log.i("MainActivity", "Database already exists")
-        if (databaseFile.exists() && isInternetAvailable() && !databaseFile.delete()) {
+        val internetAvailable = isInternetAvailable()
+        Log.i("MainActivity", "Internet availability: $internetAvailable")
+        if (databaseFile.exists() && internetAvailable && !databaseFile.delete()) {
             Log.e("MainActivity", "Cannot delete old database $databaseFile")
             return
         }

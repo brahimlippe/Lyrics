@@ -1,5 +1,6 @@
 package com.example.android.lyrics
 
+import android.graphics.Color
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -28,6 +29,7 @@ class RecyclerViewAdapter(
         holder.textView.text = data[position].title
         holder.textView.setOnClickListener {
             lyricsTextView.text = data[position].lyrics
+            lyricsTextView.setBackgroundColor(Color.parseColor("#f5f5f5"))
             hideKeyboard()
         }
     }
