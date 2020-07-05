@@ -3,7 +3,6 @@ package com.example.android.lyrics
 import android.app.Activity
 import android.app.SearchManager
 import android.content.Context
-import android.database.sqlite.SQLiteDatabase
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -29,10 +28,6 @@ class LyricsFragment : Fragment() {
     private lateinit var binding: LyricsFragmentBinding
     private lateinit var databasePath: String
 
-    companion object {
-        fun newInstance() = LyricsFragment()
-    }
-
     private lateinit var viewModel: LyricsViewModel
 
     override fun onCreateView(
@@ -50,8 +45,7 @@ class LyricsFragment : Fragment() {
         databasePath =
             "${activity!!.filesDir.absolutePath}${File.separatorChar}${getString(R.string.remote_database_name)}"
         viewModel = ViewModelProvider(this).get(LyricsViewModel::class.java)
-        binding =
-            DataBindingUtil.setContentView(activity as Activity, R.layout.lyrics_fragment)
+        binding = DataBindingUtil.setContentView(activity as Activity, R.layout.lyrics_fragment)
         binding.lyricsViewModel = viewModel
         (activity as AppCompatActivity).setSupportActionBar(binding.toolbar)
         binding.lifecycleOwner = this
@@ -65,11 +59,7 @@ class LyricsFragment : Fragment() {
         binding.resultList.apply {
             setHasFixedSize(true)
             adapter = RecyclerViewAdapter(viewModel) {
-                Log.i("LyricsFragment", "Hiding keyboard")
-                val view: View = activity!!.currentFocus ?: View(activity!!.applicationContext)
-                val imm =
-                    activity!!.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.hideSoftInputFromWindow(view.windowToken, 0)
+                hideKeyboard()
             }
         }
     }
@@ -86,9 +76,8 @@ class LyricsFragment : Fragment() {
         val searchView = menu.findItem(R.id.search).actionView as SearchView
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                if (query != null) {
-                    this@LyricsFragment.handleSearch(query)
-                }
+                if (query != null) this@LyricsFragment.handleSearch(query)
+                hideKeyboard()
                 return true
             }
 
@@ -105,6 +94,14 @@ class LyricsFragment : Fragment() {
             downloadDatabase(menu.findItem(R.id.search).actionView as SearchView)
         }
         return super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    private fun hideKeyboard() {
+        Log.i("LyricsFragment", "Hiding keyboard")
+        val view: View = activity!!.currentFocus ?: View(activity!!.applicationContext)
+        val imm =
+            activity!!.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
 
