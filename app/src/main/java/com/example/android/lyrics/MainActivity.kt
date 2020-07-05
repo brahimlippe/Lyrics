@@ -15,7 +15,9 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.RecyclerView
-import java.io.*
+import java.io.BufferedInputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.InetAddress
 import java.net.URL
@@ -60,9 +62,9 @@ class MainActivity : AppCompatActivity() {
         val urlConnection: HttpURLConnection = url.openConnection() as HttpURLConnection
         urlConnection.useCaches = false
         try {
-            val inputStream: InputStream = BufferedInputStream(urlConnection.inputStream)
+            val inputStream = BufferedInputStream(urlConnection.inputStream)
             val buffer = ByteArray(1024)
-            val output: OutputStream = FileOutputStream(databaseFile)
+            val output = FileOutputStream(databaseFile)
             var nBytesRead: Int
             var total = 0
             while (inputStream.read(buffer, 0, 1024).also { nBytesRead = it } > 0) {
@@ -110,6 +112,7 @@ class MainActivity : AppCompatActivity() {
                 }
             })
             searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
+            searchView.visibility = View.GONE
             thread {
                 downloadDatabase(menu.findItem(R.id.search).actionView as SearchView)
             }
@@ -124,7 +127,7 @@ class MainActivity : AppCompatActivity() {
             setHasFixedSize(true)
             adapter = RecyclerViewAdapter(lyricsTextView, list) {
                 Log.i("MainActivity", "Hiding keyboard")
-                var view: View = currentFocus ?: View(applicationContext)
+                val view: View = currentFocus ?: View(applicationContext)
                 val imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.hideSoftInputFromWindow(view.windowToken, 0)
             }
