@@ -9,8 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 
 
 class RecyclerViewAdapter(
-    private val lyricsTextView: TextView,
-    private val data: List<Song> = listOf(),
+    private val viewModel: LyricsViewModel,
     private val hideKeyboard : () -> Unit
 ) : RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder>() {
     class ViewHolder(val textView: TextView) : RecyclerView.ViewHolder(textView)
@@ -22,14 +21,20 @@ class RecyclerViewAdapter(
         return ViewHolder(textView)
     }
 
-    override fun getItemCount(): Int = data.size
+    override fun getItemCount(): Int = viewModel.listOfSongs.value?.size ?: 0
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         Log.i("RecyclerViewAdapter", "onBindViewAdapter called")
-        holder.textView.text = data[position].title
+        if (viewModel.listOfSongs.value == null)
+        {
+            // This case seems impossible
+            Log.i("RecyclerViewAdapter", "No songs found")
+            return
+        }
+        holder.textView.text = viewModel.listOfSongs.value!![position].title
         holder.textView.setOnClickListener {
-            lyricsTextView.text = data[position].lyrics
-            lyricsTextView.setBackgroundColor(Color.parseColor("#f5f5f5"))
+            Log.d("RecyclerViewAdapter", "Updating lyrics view model")
+            viewModel.lyrics.value = viewModel.listOfSongs.value!![position].lyrics
             hideKeyboard()
         }
     }
