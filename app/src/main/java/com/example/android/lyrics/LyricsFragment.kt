@@ -3,7 +3,6 @@ package com.example.android.lyrics
 import android.app.Activity
 import android.app.SearchManager
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.*
@@ -11,6 +10,7 @@ import androidx.fragment.app.Fragment
 import android.view.inputmethod.InputMethodManager
 import android.widget.SearchView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -50,7 +50,9 @@ class LyricsFragment : Fragment() {
         (activity as AppCompatActivity).setSupportActionBar(binding.toolbar)
         binding.lifecycleOwner = this
         viewModel.lyrics.observe(viewLifecycleOwner, Observer {
-            binding.lyricsTextView.setBackgroundColor(Color.parseColor("#f5f5f5"))
+            if (context != null) {
+                binding.lyricsTextView.background = AppCompatResources.getDrawable(context!!, R.drawable.lyrics_box)
+            }
         })
         updateListOfSongs()
     }
