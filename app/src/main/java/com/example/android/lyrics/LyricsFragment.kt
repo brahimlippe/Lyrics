@@ -6,18 +6,19 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.*
-import androidx.fragment.app.Fragment
 import android.view.inputmethod.InputMethodManager
 import android.widget.SearchView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.example.android.lyrics.databinding.LyricsFragmentBinding
+import org.json.JSONObject
 import java.io.BufferedInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.InetAddress
 import java.net.URL
@@ -26,8 +27,7 @@ import kotlin.concurrent.thread
 
 class LyricsFragment : Fragment() {
     private lateinit var binding: LyricsFragmentBinding
-    private lateinit var databasePath: String
-
+    private lateinit var database: Database
     private lateinit var viewModel: LyricsViewModel
 
     override fun onCreateView(
@@ -42,26 +42,33 @@ class LyricsFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         Log.i("LyricsFragment", "onActivityCreated Called")
         super.onActivityCreated(savedInstanceState)
-        databasePath =
-            "${activity!!.filesDir.absolutePath}${File.separatorChar}${getString(R.string.remote_database_name)}"
+        database =
+            Database("${activity!!.filesDir.absolutePath}${File.separatorChar}${getString(R.string.remote_database_name)}")
         viewModel = ViewModelProvider(this).get(LyricsViewModel::class.java)
         binding = DataBindingUtil.setContentView(activity as Activity, R.layout.lyrics_fragment)
         binding.lyricsViewModel = viewModel
         (activity as AppCompatActivity).setSupportActionBar(binding.toolbar)
         binding.lifecycleOwner = this
         viewModel.lyrics.observe(viewLifecycleOwner, Observer {
+            Log.d(
+                "LyricsFragment",
+                "Lyrics changed to ${viewModel.lyrics.value?.substring(0, 50)}...etc"
+            )
             if (context != null) {
-                binding.lyricsTextView.background = AppCompatResources.getDrawable(context!!, R.drawable.lyrics_box)
+                binding.lyricsScrollView.background =
+                    AppCompatResources.getDrawable(context!!, R.drawable.lyrics_box)
             }
         })
-        updateListOfSongs()
+        viewModel.listOfSongs.observe(viewLifecycleOwner, Observer {
+            updateListOfSongs()
+        })
     }
 
     private fun updateListOfSongs() {
         binding.resultList.apply {
             setHasFixedSize(true)
             adapter = RecyclerViewAdapter(viewModel) {
-                hideKeyboard()
+                Companion.hideKeyboard(activity as Activity)
             }
         }
     }
@@ -79,7 +86,7 @@ class LyricsFragment : Fragment() {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 if (query != null) this@LyricsFragment.handleSearch(query)
-                hideKeyboard()
+                Companion.hideKeyboard(activity as Activity)
                 return true
             }
 
@@ -93,74 +100,93 @@ class LyricsFragment : Fragment() {
         searchView.setSearchableInfo(searchManager.getSearchableInfo(activity!!.componentName))
         searchView.visibility = View.GONE
         thread {
-            downloadDatabase(menu.findItem(R.id.search).actionView as SearchView)
+            if (downloadDatabase() || fallbackDownloadDatabase()) {
+                searchView.visibility = View.VISIBLE
+            }
         }
         return super.onCreateOptionsMenu(menu, inflater)
     }
 
-    private fun hideKeyboard() {
-        Log.i("LyricsFragment", "Hiding keyboard")
-        val view: View = activity!!.currentFocus ?: View(activity!!.applicationContext)
-        val imm =
-            activity!!.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(view.windowToken, 0)
-    }
-
-
-    private fun handleSearch(searchString: String) {
-        if (!viewModel.filterSongs(databasePath, searchString)) {
-            showError(getString(R.string.database_connection_error))
-            return
-        }
-        updateListOfSongs()
-    }
-
-    private fun isInternetAvailable(): Boolean {
-        try {
-            val address = InetAddress.getByName("www.google.com")
-            return !address.equals("")
-        } catch (e: UnknownHostException) {
-        }
-        return false
-    }
-
-    private fun downloadDatabase(searchView: SearchView) {
-        val databaseFile = File(databasePath)
-        if (databaseFile.exists()) Log.i("MainActivity", "Database already exists")
-        val internetAvailable = isInternetAvailable()
-        Log.i("MainActivity", "Internet availability: $internetAvailable")
-        if (databaseFile.exists() && internetAvailable && !databaseFile.delete()) {
-            Log.e("MainActivity", "Cannot delete old database $databaseFile")
-            return
-        }
-        val url = URL(getString(R.string.remote_database))
+    private fun downloadDatabase(): Boolean {
+        Log.i("LyricsFragment", "Querying songs")
+        val url = URL(getString(R.string.remote_server))
         val urlConnection: HttpURLConnection = url.openConnection() as HttpURLConnection
         urlConnection.useCaches = false
         try {
             val inputStream = BufferedInputStream(urlConnection.inputStream)
             val buffer = ByteArray(1024)
-            val output = FileOutputStream(databaseFile)
             var nBytesRead: Int
             var total = 0
+            val outputStream = ByteArrayOutputStream()
             while (inputStream.read(buffer, 0, 1024).also { nBytesRead = it } > 0) {
-                output.write(buffer, 0, nBytesRead)
                 total += nBytesRead
+                outputStream.write(buffer)
             }
-            Log.i("MainActivity", "Writing $total bytes in ${databaseFile.absolutePath}")
-            output.flush()
-            output.close()
-            inputStream.close()
-            Log.i("MainActivity", "Finished download")
-            searchView.visibility = View.VISIBLE
+            Log.i("LyricsFragment", "Downloaded $total bytes from ${url.toString()}")
+            val jsonArray = JSONObject(outputStream.toString()).getJSONArray("songs")
+            for (i in 0 until jsonArray.length()) {
+                val song = jsonArray.get(i) as JSONObject
+                database.insertSong(song.getString("title"), song.getString("lyrics"))
+            }
         } catch (e: Throwable) {
-            Log.w("MainActivity", e.toString())
-        } finally {
-            urlConnection.disconnect()
+            Log.e("LyricsFragment", e.toString())
+            return false
         }
+        return true
+    }
+
+    private fun handleSearch(searchString: String) {
+        try {
+            viewModel.listOfSongs.value = database.filterSongs(searchString)
+        } catch (e: Throwable) {
+            showError(getString(R.string.database_connection_error))
+            return
+        }
+    }
+
+    private fun fallbackDownloadDatabase(): Boolean {
+        Log.i("LyricsFragment", "Downloading fallback database")
+        if (database.countSongs() > 0) {
+            Log.i("MainActivity", "Database already exists no need to download fallback database")
+            return true
+        }
+        if (!Companion.isInternetAvailable()) {
+            Log.e("MainActivity", "No internet connection to download fallback database")
+            return false
+        }
+        val url = URL(getString(R.string.fallback_remote_database))
+        val urlConnection: HttpURLConnection = url.openConnection() as HttpURLConnection
+        urlConnection.useCaches = false
+        val inputStream = BufferedInputStream(urlConnection.inputStream)
+        database.fallbackDownload(inputStream)
+        Log.i("MainActivity", "Finished download")
+        inputStream.close()
+        urlConnection.disconnect()
+        return true
+
     }
 
     private fun showError(error: String) {
         binding.lyricsTextView.text = error
+    }
+
+    companion object {
+        private fun isInternetAvailable(): Boolean {
+            try {
+                val address = InetAddress.getByName("www.google.com")
+                return !address.equals("")
+            } catch (e: UnknownHostException) {
+            }
+            return false
+        }
+
+        private fun hideKeyboard(activity: Activity) {
+            Log.i("LyricsFragment", "Hiding keyboard")
+            val view: View = activity.currentFocus ?: View(activity.applicationContext)
+            val imm =
+                activity.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(view.windowToken, 0)
+        }
     }
 
 }

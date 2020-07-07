@@ -9,7 +9,7 @@
     android:paddingLeft="16dp"
     android:paddingRight="16dp"
     android:textAlignment="center"
-    android:textColor="@android:color/holo_red_dark"
+    android:textColor="#90ff0000"
     android:textSize="24sp"
     tool:text="يا ناس جرت لي غرائب">
 
