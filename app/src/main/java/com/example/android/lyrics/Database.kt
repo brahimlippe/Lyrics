@@ -20,13 +20,15 @@ class Database(databasePath: String) {
     init {
         database.execSQL(
             "CREATE TABLE IF NOT EXISTS Song(" +
-                    "  title TEXT PRIMARY KEY NOT NULL," +
+                    "  songID INTEGER PRIMARY KEY NOT NULL," +
+                    "  title TEXT UNIQUE NOT NULL," +
                     "  lyrics TEXT NOT NULL)"
         )
     }
 
-    fun insertSong(title: String, lyrics: String) {
+    fun insertSong(songID: Long, title: String, lyrics: String) {
         val values = ContentValues()
+        values.put("songID", songID)
         values.put("title", title)
         values.put("lyrics", lyrics)
         database.replace("Song", null, values)
@@ -97,6 +99,29 @@ class Database(databasePath: String) {
             if (countIndex >= 0) {
                 val result = cursor.getInt(countIndex)
                 Log.i("Database", "$result song(s) in database")
+                return result
+            }
+        }
+        cursor.close()
+        return -1
+    }
+
+    fun getGreatestSongID(): Long {
+        val cursor = database.query(
+            "Song",
+            arrayOf("max(songID) as maxSongID"),
+            null,
+            null,
+            null,
+            null,
+            null
+        )
+        cursor.moveToFirst()
+        if (!cursor.isAfterLast) {
+            val maxSongIDIndex = cursor.getColumnIndex("maxSongID")
+            if (maxSongIDIndex >= 0) {
+                val result = cursor.getLong(maxSongIDIndex)
+                cursor.close()
                 return result
             }
         }

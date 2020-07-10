@@ -4,5 +4,7 @@
     <string name="fallback_remote_database">https://github.com/brahimlippe/Lyrics/blob/master/app/src/main/assets/songs.sqlite?raw=true</string>
     <string name="remote_database_name">songs.sqlite</string>
     <string name="database_connection_error">تعطل الاتصال بمخزن البيانات</string>
-    <string name="remote_server">http://192.168.0.22:5000/songs/2</string>
+    <string name="remote_server">https://poetic-feelings.herokuapp.com/songs/</string>
+    <string name="saved_songs_1">تم حفظ</string>
+    <string name="saved_songs_2">أغنية جديدة</string>
 </resources>

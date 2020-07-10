@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.SearchView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.databinding.DataBindingUtil
@@ -68,7 +69,7 @@ class LyricsFragment : Fragment() {
         binding.resultList.apply {
             setHasFixedSize(true)
             adapter = RecyclerViewAdapter(viewModel) {
-                Companion.hideKeyboard(activity as Activity)
+                hideKeyboard(activity as Activity)
             }
         }
     }
@@ -86,7 +87,7 @@ class LyricsFragment : Fragment() {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 if (query != null) this@LyricsFragment.handleSearch(query)
-                Companion.hideKeyboard(activity as Activity)
+                hideKeyboard(activity as Activity)
                 return true
             }
 
@@ -108,8 +109,8 @@ class LyricsFragment : Fragment() {
     }
 
     private fun downloadDatabase(): Boolean {
-        Log.i("LyricsFragment", "Querying songs")
-        val url = URL(getString(R.string.remote_server))
+        val url = URL(getString(R.string.remote_server) + database.getGreatestSongID())
+        Log.i("LyricsFragment", "Querying songs from ${url.toString()}")
         val urlConnection: HttpURLConnection = url.openConnection() as HttpURLConnection
         urlConnection.useCaches = false
         try {
@@ -126,7 +127,18 @@ class LyricsFragment : Fragment() {
             val jsonArray = JSONObject(outputStream.toString()).getJSONArray("songs")
             for (i in 0 until jsonArray.length()) {
                 val song = jsonArray.get(i) as JSONObject
-                database.insertSong(song.getString("title"), song.getString("lyrics"))
+                database.insertSong(
+                    song.getLong("songID"),
+                    song.getString("title"),
+                    song.getString("lyrics")
+                )
+            }
+            activity?.runOnUiThread {
+                if (jsonArray.length() < 1) return@runOnUiThread
+                var text = getString(R.string.saved_songs_1)
+                if (jsonArray.length() > 1) text += " " + jsonArray.length().toString()
+                text += """ ${getString(R.string.saved_songs_2)}"""
+                Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
             }
         } catch (e: Throwable) {
             Log.e("LyricsFragment", e.toString())
