@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Paroles</string>
+    <string name="search_text_hint">Recherche</string>
+    <string name="database_connection_error">Problème d\'accés à la base de données</string>
+    <string name="saved_songs_2">" chansons ont été téléchargées"</string>
+    <string name="saved_songs_1">" "</string>
+</resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">sözler</string>
+    <string name="search_text_hint">aramak</string>
+    <string name="saved_songs_1">"  "</string>
+    <string name="saved_songs_2">" tane yeni şarkı(lar) indirildi"</string>
+    <string name="database_connection_error">Veritabanına bağlanılamıyor</string>
+</resources>

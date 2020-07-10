@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lyrics</string>
+    <string name="search_text_hint">Search</string>
+    <string name="database_connection_error">Cannot access database</string>
+    <string name="saved_songs_2">" songs were saved"</string>
+    <string name="saved_songs_1">" "</string>
+</resources>

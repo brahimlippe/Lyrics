@@ -1,10 +1,10 @@
 <resources>
     <string name="app_name">كلمات</string>
     <string name="search_text_hint">البحث</string>
-    <string name="fallback_remote_database">https://github.com/brahimlippe/Lyrics/blob/master/app/src/main/assets/songs.sqlite?raw=true</string>
-    <string name="remote_database_name">songs.sqlite</string>
+    <string name="fallback_remote_database" translatable="false">https://github.com/brahimlippe/Lyrics/blob/master/app/src/main/assets/songs.sqlite?raw=true</string>
+    <string name="remote_database_name" translatable="false">songs.sqlite</string>
     <string name="database_connection_error">تعطل الاتصال بمخزن البيانات</string>
-    <string name="remote_server">https://poetic-feelings.herokuapp.com/songs/</string>
+    <string name="remote_server" translatable="false">https://poetic-feelings.herokuapp.com/songs/</string>
     <string name="saved_songs_1">تم حفظ</string>
     <string name="saved_songs_2">أغنية جديدة</string>
 </resources>
