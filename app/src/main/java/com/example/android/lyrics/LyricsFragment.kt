@@ -4,6 +4,8 @@ import android.app.Activity
 import android.app.SearchManager
 import android.content.Context
 import android.os.Bundle
+import android.transition.ChangeBounds
+import android.transition.TransitionManager
 import android.util.Log
 import android.view.*
 import android.view.inputmethod.InputMethodManager
@@ -55,6 +57,10 @@ class LyricsFragment : Fragment() {
                 "LyricsFragment",
                 "Lyrics changed to ${viewModel.lyrics.value?.substring(0, 50)}...etc"
             )
+            TransitionManager.beginDelayedTransition(binding.lyricsScrollView as ViewGroup)
+            TransitionManager.beginDelayedTransition(binding.resultList as ViewGroup)
+            binding.lyricsTextView.visibility = View.VISIBLE
+            binding.resultList.visibility = View.GONE
             if (context != null) {
                 binding.lyricsScrollView.background =
                     AppCompatResources.getDrawable(context!!, R.drawable.lyrics_box)
@@ -86,7 +92,9 @@ class LyricsFragment : Fragment() {
         val searchView = menu.findItem(R.id.search).actionView as SearchView
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                if (query != null) this@LyricsFragment.handleSearch(query)
+                if (query != null && query.compareTo("") != 0) {
+                    this@LyricsFragment.handleSearch(query)
+                }
                 hideKeyboard(activity as Activity)
                 return true
             }
@@ -95,6 +103,11 @@ class LyricsFragment : Fragment() {
                 if (newText != null && newText.compareTo("") != 0) {
                     this@LyricsFragment.handleSearch(newText)
                 }
+                TransitionManager.beginDelayedTransition(binding.lyricsScrollView as ViewGroup)
+                TransitionManager.beginDelayedTransition(binding.resultList as ViewGroup, ChangeBounds())
+                binding.resultList.visibility = View.VISIBLE
+                binding.lyricsTextView.visibility = View.GONE
+                binding.lyricsScrollView.background = binding.resultList.background
                 return true
             }
         })

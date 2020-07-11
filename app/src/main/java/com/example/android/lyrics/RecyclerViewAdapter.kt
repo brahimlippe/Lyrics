@@ -1,6 +1,5 @@
 package com.example.android.lyrics
 
-import android.graphics.Color
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -10,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 
 class RecyclerViewAdapter(
     private val viewModel: LyricsViewModel,
-    private val hideKeyboard : () -> Unit
+    private val hideKeyboard: () -> Unit
 ) : RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder>() {
     class ViewHolder(val textView: TextView) : RecyclerView.ViewHolder(textView)
 
@@ -25,8 +24,7 @@ class RecyclerViewAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         Log.i("RecyclerViewAdapter", "onBindViewAdapter called")
-        if (viewModel.listOfSongs.value == null)
-        {
+        if (viewModel.listOfSongs.value == null) {
             // This case seems impossible
             Log.i("RecyclerViewAdapter", "No songs found")
             return
