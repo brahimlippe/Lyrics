@@ -38,7 +38,6 @@ class LyricsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         Log.i("LyricsFragment", "onCreateView Called")
-        setHasOptionsMenu(true)
         return inflater.inflate(R.layout.lyrics_fragment, container, false)
     }
 
@@ -69,28 +68,8 @@ class LyricsFragment : Fragment() {
         viewModel.listOfSongs.observe(viewLifecycleOwner, Observer {
             updateListOfSongs()
         })
-    }
-
-    private fun updateListOfSongs() {
-        binding.resultList.apply {
-            setHasFixedSize(true)
-            adapter = RecyclerViewAdapter(viewModel) {
-                hideKeyboard(activity as Activity)
-            }
-        }
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        Log.i("LyricsFragment", "onCreateOptionsMenu Called")
-        if (activity == null) {
-            Log.e("LyricsFragment", "onCreateOptionsMenu called after onActivity created")
-            return super.onCreateOptionsMenu(menu, inflater)
-        }
-        inflater.inflate(R.menu.options_menu, menu)
-        Log.i("LyricsFragment", "Add search menu to action bar")
         val searchManager = activity!!.getSystemService(Context.SEARCH_SERVICE) as SearchManager
-        val searchView = menu.findItem(R.id.search).actionView as SearchView
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+        binding.search.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 if (query != null && query.compareTo("") != 0) {
                     this@LyricsFragment.handleSearch(query)
@@ -104,21 +83,32 @@ class LyricsFragment : Fragment() {
                     this@LyricsFragment.handleSearch(newText)
                 }
                 TransitionManager.beginDelayedTransition(binding.lyricsScrollView as ViewGroup)
-                TransitionManager.beginDelayedTransition(binding.resultList as ViewGroup, ChangeBounds())
+                TransitionManager.beginDelayedTransition(
+                    binding.resultList as ViewGroup,
+                    ChangeBounds()
+                )
                 binding.resultList.visibility = View.VISIBLE
                 binding.lyricsTextView.visibility = View.GONE
                 binding.lyricsScrollView.background = binding.resultList.background
                 return true
             }
         })
-        searchView.setSearchableInfo(searchManager.getSearchableInfo(activity!!.componentName))
-        searchView.visibility = View.GONE
+        binding.search.setSearchableInfo(searchManager.getSearchableInfo(activity!!.componentName))
+        binding.search.visibility = View.GONE
         thread {
             if (downloadDatabase() || fallbackDownloadDatabase()) {
-                searchView.visibility = View.VISIBLE
+                activity?.runOnUiThread { binding.search.visibility = View.VISIBLE }
             }
         }
-        return super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    private fun updateListOfSongs() {
+        binding.resultList.apply {
+            setHasFixedSize(true)
+            adapter = RecyclerViewAdapter(viewModel) {
+                hideKeyboard(activity as Activity)
+            }
+        }
     }
 
     private fun downloadDatabase(): Boolean {
