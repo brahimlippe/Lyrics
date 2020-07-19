@@ -165,7 +165,7 @@ class LyricsFragment : Fragment() {
             Log.i("MainActivity", "Database already exists no need to download fallback database")
             return true
         }
-        if (!Companion.isInternetAvailable()) {
+        if (!isInternetAvailable()) {
             Log.e("MainActivity", "No internet connection to download fallback database")
             return false
         }
