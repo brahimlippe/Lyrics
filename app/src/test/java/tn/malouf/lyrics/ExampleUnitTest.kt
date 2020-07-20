@@ -1,4 +1,4 @@
-package com.example.android.lyrics
+package tn.malouf.lyrics
 
 import org.junit.Test
 

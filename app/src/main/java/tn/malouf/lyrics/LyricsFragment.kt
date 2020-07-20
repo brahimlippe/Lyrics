@@ -1,4 +1,4 @@
-package com.example.android.lyrics
+package tn.malouf.lyrics
 
 import android.app.Activity
 import android.app.SearchManager
@@ -19,7 +19,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import com.example.android.lyrics.databinding.LyricsFragmentBinding
+import tn.malouf.lyrics.databinding.LyricsFragmentBinding
 import org.json.JSONObject
 import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream

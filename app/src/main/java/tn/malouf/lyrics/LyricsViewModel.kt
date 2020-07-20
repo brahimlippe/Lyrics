@@ -1,4 +1,4 @@
-package com.example.android.lyrics
+package tn.malouf.lyrics
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel

@@ -1,4 +1,4 @@
-package com.example.android.lyrics
+package tn.malouf.lyrics
 
 import android.content.ContentValues
 import android.database.DatabaseErrorHandler
