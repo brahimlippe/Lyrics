@@ -7,9 +7,12 @@ import android.os.Bundle
 import android.transition.ChangeBounds
 import android.transition.TransitionManager
 import android.util.Log
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.SearchView
+import android.widget.SimpleCursorAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
@@ -49,52 +52,38 @@ class LyricsFragment : Fragment() {
         viewModel = ViewModelProvider(this).get(LyricsViewModel::class.java)
         binding = DataBindingUtil.setContentView(activity as Activity, R.layout.lyrics_fragment)
         binding.lyricsViewModel = viewModel
+        binding.resultList.apply {
+            setHasFixedSize(true)
+            adapter = RecyclerViewAdapter(viewModel)
+        }
         (activity as AppCompatActivity).setSupportActionBar(binding.toolbar)
         binding.lifecycleOwner = this
         viewModel.lyrics.observe(viewLifecycleOwner, Observer {
-            Log.d(
-                "LyricsFragment",
-                "Lyrics changed to ${viewModel.lyrics.value?.substring(0, 50)}...etc"
-            )
-            TransitionManager.beginDelayedTransition(binding.lyricsScrollView as ViewGroup)
-            TransitionManager.beginDelayedTransition(binding.resultList as ViewGroup)
-            binding.lyricsTextView.visibility = View.VISIBLE
-            binding.resultList.visibility = View.GONE
-            if (context != null) {
-                binding.lyricsScrollView.background =
-                    AppCompatResources.getDrawable(context!!, R.drawable.lyrics_box)
-            }
+            showLyrics()
         })
         viewModel.listOfSongs.observe(viewLifecycleOwner, Observer {
-            updateListOfSongs()
+            binding.resultList.adapter?.notifyDataSetChanged()
         })
         val searchManager = activity!!.getSystemService(Context.SEARCH_SERVICE) as SearchManager
-        binding.search.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                if (query != null && query.compareTo("") != 0) {
-                    this@LyricsFragment.handleSearch(query)
+        binding.search.apply {
+            setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    this@LyricsFragment.onQueryTextSubmit(query)
+                    return true
                 }
-                hideKeyboard(activity as Activity)
-                return true
-            }
 
-            override fun onQueryTextChange(newText: String?): Boolean {
-                if (newText != null && newText.compareTo("") != 0) {
-                    this@LyricsFragment.handleSearch(newText)
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    this@LyricsFragment.onQueryTextChange(newText)
+                    return true
                 }
-                TransitionManager.beginDelayedTransition(binding.lyricsScrollView as ViewGroup)
-                TransitionManager.beginDelayedTransition(
-                    binding.resultList as ViewGroup,
-                    ChangeBounds()
-                )
-                binding.resultList.visibility = View.VISIBLE
-                binding.lyricsTextView.visibility = View.GONE
-                binding.lyricsScrollView.background = binding.resultList.background
-                return true
+            })
+            setSearchableInfo(searchManager.getSearchableInfo(activity!!.componentName))
+            setOnQueryTextFocusChangeListener { _, hasFocus ->
+                if (hasFocus) {
+                    showSuggestionsList()
+                }
             }
-        })
-        binding.search.setSearchableInfo(searchManager.getSearchableInfo(activity!!.componentName))
-        binding.search.visibility = View.GONE
+        }
         thread {
             if (downloadDatabase() || fallbackDownloadDatabase()) {
                 activity?.runOnUiThread { binding.search.visibility = View.VISIBLE }
@@ -102,13 +91,45 @@ class LyricsFragment : Fragment() {
         }
     }
 
-    private fun updateListOfSongs() {
-        binding.resultList.apply {
-            setHasFixedSize(true)
-            adapter = RecyclerViewAdapter(viewModel) {
-                hideKeyboard(activity as Activity)
-            }
+    private fun showSuggestionsList() {
+        TransitionManager.beginDelayedTransition(binding.lyricsScrollView as ViewGroup)
+        TransitionManager.beginDelayedTransition(
+            binding.resultList as ViewGroup,
+            ChangeBounds()
+        )
+        binding.resultList.visibility = View.VISIBLE
+        binding.lyricsTextView.visibility = View.GONE
+        binding.lyricsScrollView.background = binding.resultList.background
+    }
+
+    private fun onQueryTextSubmit(query: String?) {
+        if (query != null && query.compareTo("") != 0) {
+            this@LyricsFragment.handleSearch(query)
         }
+        hideKeyboard(activity as Activity)
+    }
+
+    private fun onQueryTextChange(newText: String?) {
+        if (newText != null && newText.compareTo("") != 0) {
+            this@LyricsFragment.handleSearch(newText)
+        }
+        showSuggestionsList()
+    }
+
+    private fun showLyrics() {
+        Log.d(
+            "LyricsFragment",
+            "Lyrics changed to ${viewModel.lyrics.value?.substring(0, 50)}...etc"
+        )
+        TransitionManager.beginDelayedTransition(binding.lyricsScrollView as ViewGroup)
+        TransitionManager.beginDelayedTransition(binding.resultList as ViewGroup)
+        binding.lyricsTextView.visibility = View.VISIBLE
+        binding.resultList.visibility = View.GONE
+        if (context != null) {
+            binding.lyricsScrollView.background =
+                AppCompatResources.getDrawable(context!!, R.drawable.lyrics_box)
+        }
+        binding.search.clearFocus()
     }
 
     private fun downloadDatabase(): Boolean {

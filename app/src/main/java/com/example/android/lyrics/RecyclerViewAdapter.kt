@@ -8,8 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 
 
 class RecyclerViewAdapter(
-    private val viewModel: LyricsViewModel,
-    private val hideKeyboard: () -> Unit
+    private val viewModel: LyricsViewModel
 ) : RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder>() {
     class ViewHolder(val textView: TextView) : RecyclerView.ViewHolder(textView)
 
@@ -33,7 +32,6 @@ class RecyclerViewAdapter(
         holder.textView.setOnClickListener {
             Log.d("RecyclerViewAdapter", "Updating lyrics view model")
             viewModel.lyrics.value = viewModel.listOfSongs.value!![position].lyrics
-            hideKeyboard()
         }
     }
 }
