@@ -12,7 +12,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.SearchView
-import android.widget.SimpleCursorAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
@@ -51,19 +50,19 @@ class LyricsFragment : Fragment() {
             Database("${activity!!.filesDir.absolutePath}${File.separatorChar}${getString(R.string.remote_database_name)}")
         viewModel = ViewModelProvider(this).get(LyricsViewModel::class.java)
         binding = DataBindingUtil.setContentView(activity as Activity, R.layout.lyrics_fragment)
-        binding.lyricsViewModel = viewModel
-        binding.resultList.apply {
-            setHasFixedSize(true)
-            adapter = RecyclerViewAdapter(viewModel)
+        binding.apply {
+            lyricsViewModel = viewModel
+            resultList.apply {
+                setHasFixedSize(true)
+                adapter = RecyclerViewAdapter(viewModel)
+            }
+            (activity as AppCompatActivity).setSupportActionBar(toolbar)
+            lifecycleOwner = this@LyricsFragment
         }
-        (activity as AppCompatActivity).setSupportActionBar(binding.toolbar)
-        binding.lifecycleOwner = this
-        viewModel.lyrics.observe(viewLifecycleOwner, Observer {
-            showLyrics()
-        })
-        viewModel.listOfSongs.observe(viewLifecycleOwner, Observer {
-            binding.resultList.adapter?.notifyDataSetChanged()
-        })
+        viewModel.lyrics.observe(viewLifecycleOwner, Observer { showLyrics() })
+        viewModel.listOfSongs.observe(
+            viewLifecycleOwner,
+            Observer { binding.resultList.adapter?.notifyDataSetChanged() })
         val searchManager = activity!!.getSystemService(Context.SEARCH_SERVICE) as SearchManager
         binding.search.apply {
             setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -78,11 +77,7 @@ class LyricsFragment : Fragment() {
                 }
             })
             setSearchableInfo(searchManager.getSearchableInfo(activity!!.componentName))
-            setOnQueryTextFocusChangeListener { _, hasFocus ->
-                if (hasFocus) {
-                    showSuggestionsList()
-                }
-            }
+            setOnQueryTextFocusChangeListener { _, hasFocus -> if (hasFocus) showSuggestionsList() }
         }
         thread {
             if (downloadDatabase() || fallbackDownloadDatabase()) {
@@ -97,9 +92,11 @@ class LyricsFragment : Fragment() {
             binding.resultList as ViewGroup,
             ChangeBounds()
         )
-        binding.resultList.visibility = View.VISIBLE
-        binding.lyricsTextView.visibility = View.GONE
-        binding.lyricsScrollView.background = binding.resultList.background
+        binding.apply {
+            resultList.visibility = View.VISIBLE
+            lyricsTextView.visibility = View.GONE
+            lyricsScrollView.background = resultList.background
+        }
     }
 
     private fun onQueryTextSubmit(query: String?) {
@@ -134,7 +131,7 @@ class LyricsFragment : Fragment() {
 
     private fun downloadDatabase(): Boolean {
         val url = URL(getString(R.string.remote_server) + database.getGreatestSongID())
-        Log.i("LyricsFragment", "Querying songs from ${url.toString()}")
+        Log.i("LyricsFragment", "Querying songs from $url")
         val urlConnection: HttpURLConnection = url.openConnection() as HttpURLConnection
         urlConnection.useCaches = false
         try {
@@ -147,7 +144,7 @@ class LyricsFragment : Fragment() {
                 total += nBytesRead
                 outputStream.write(buffer)
             }
-            Log.i("LyricsFragment", "Downloaded $total bytes from ${url.toString()}")
+            Log.i("LyricsFragment", "Downloaded $total bytes from $url")
             val jsonArray = JSONObject(outputStream.toString()).getJSONArray("songs")
             for (i in 0 until jsonArray.length()) {
                 val song = jsonArray.get(i) as JSONObject
