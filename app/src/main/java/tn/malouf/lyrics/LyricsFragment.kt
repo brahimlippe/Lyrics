@@ -192,7 +192,6 @@ class LyricsFragment : Fragment() {
         inputStream.close()
         urlConnection.disconnect()
         return true
-
     }
 
     private fun showError(error: String) {
@@ -217,5 +216,4 @@ class LyricsFragment : Fragment() {
             imm.hideSoftInputFromWindow(view.windowToken, 0)
         }
     }
-
 }
