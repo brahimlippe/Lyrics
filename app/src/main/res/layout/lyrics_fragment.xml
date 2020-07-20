@@ -24,7 +24,8 @@
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+            app:layout_constraintTop_toBottomOf="@+id/toolbar"
+            android:visibility="@{lyricsViewModel.resultListVisibility}"/>
 
         <ScrollView
             android:id="@+id/lyrics_scroll_view"
@@ -38,7 +39,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/result_list"
-            app:layout_constraintVertical_bias="1.0">
+            app:layout_constraintVertical_bias="1.0"
+            android:background="@{lyricsViewModel.lyricsScrollBackground}" >
 
             <TextView
                 android:id="@+id/lyricsTextView"
@@ -52,7 +54,8 @@
                 android:text="@{lyricsViewModel.lyrics}"
                 android:textAlignment="center"
                 android:textSize="16sp"
-                tools:text="@tools:sample/lorem/random" />
+                tools:text="@tools:sample/lorem/random"
+                android:visibility="@{lyricsViewModel.lyricsVisibility}"/>
         </ScrollView>
 
         <androidx.appcompat.widget.Toolbar

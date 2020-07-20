@@ -3,6 +3,7 @@ package tn.malouf.lyrics
 import android.app.Activity
 import android.app.SearchManager
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.transition.ChangeBounds
 import android.transition.TransitionManager
@@ -19,8 +20,8 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import tn.malouf.lyrics.databinding.LyricsFragmentBinding
 import org.json.JSONObject
+import tn.malouf.lyrics.databinding.LyricsFragmentBinding
 import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -92,11 +93,7 @@ class LyricsFragment : Fragment() {
             binding.resultList as ViewGroup,
             ChangeBounds()
         )
-        binding.apply {
-            resultList.visibility = View.VISIBLE
-            lyricsTextView.visibility = View.GONE
-            lyricsScrollView.background = resultList.background
-        }
+        viewModel.showSuggestionsList(binding.resultList.background)
     }
 
     private fun onQueryTextSubmit(query: String?) {
@@ -120,12 +117,11 @@ class LyricsFragment : Fragment() {
         )
         TransitionManager.beginDelayedTransition(binding.lyricsScrollView as ViewGroup)
         TransitionManager.beginDelayedTransition(binding.resultList as ViewGroup)
-        binding.lyricsTextView.visibility = View.VISIBLE
-        binding.resultList.visibility = View.GONE
+        var background: Drawable? = null
         if (context != null) {
-            binding.lyricsScrollView.background =
-                AppCompatResources.getDrawable(context!!, R.drawable.lyrics_box)
+            background = AppCompatResources.getDrawable(context!!, R.drawable.lyrics_box)
         }
+        viewModel.showLyrics(background)
         binding.search.clearFocus()
     }
 
