@@ -59,9 +59,32 @@ class LyricsFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         Log.i("LyricsFragment", "onActivityCreated Called")
         super.onActivityCreated(savedInstanceState)
+        val listener =
+            object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+                override fun onScale(detector: ScaleGestureDetector?): Boolean {
+                    if (detector == null) return false
+                    viewModel.scaleLyricsText(detector.scaleFactor)
+                    return true
+                }
+            }
+
+        val detector = ScaleGestureDetector(context, listener)
         database =
             Database("${activity!!.filesDir.absolutePath}${File.separatorChar}${getString(R.string.remote_database_name)}")
+
+        // Observers
         viewModel = ViewModelProvider(this).get(LyricsViewModel::class.java)
+        viewModel.apply {
+            scale.observe(viewLifecycleOwner, Observer {
+                binding.lyricsTextView.textSize = 16 * it
+            })
+            lyrics.observe(viewLifecycleOwner, Observer { showLyrics() })
+            listOfSongs.observe(
+                viewLifecycleOwner,
+                Observer { binding.resultList.adapter?.notifyDataSetChanged() })
+        }
+
+        // Bindings
         binding = DataBindingUtil.setContentView(activity as Activity, R.layout.lyrics_fragment)
         binding.apply {
             lyricsViewModel = viewModel
@@ -72,10 +95,6 @@ class LyricsFragment : Fragment() {
             (activity as AppCompatActivity).setSupportActionBar(toolbar)
             lifecycleOwner = this@LyricsFragment
         }
-        viewModel.lyrics.observe(viewLifecycleOwner, Observer { showLyrics() })
-        viewModel.listOfSongs.observe(
-            viewLifecycleOwner,
-            Observer { binding.resultList.adapter?.notifyDataSetChanged() })
         val searchManager = activity!!.getSystemService(Context.SEARCH_SERVICE) as SearchManager
         binding.search.apply {
             setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -96,6 +115,11 @@ class LyricsFragment : Fragment() {
             if (downloadDatabase() || fallbackDownloadDatabase()) {
                 activity?.runOnUiThread { binding.search.visibility = View.VISIBLE }
             }
+        }
+        binding.lyricsScrollView.setOnTouchListener { _, event ->
+            Log.i("LyricsFragment", "onTouchListener called")
+            detector.onTouchEvent(event)
+            false
         }
     }
 

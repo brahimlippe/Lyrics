@@ -22,6 +22,13 @@ class LyricsViewModel : ViewModel() {
     val lyricsScrollBackground: LiveData<Drawable>
         get() = _lyricsScrollBackground
 
+    private var _scale = MutableLiveData<Float>(1.0f)
+    val scale : LiveData<Float>
+    get() = _scale
+
+    fun scaleLyricsText(newScale: Float) {
+        _scale.value = newScale * _scale.value!!
+    }
     fun showSuggestionsList(background: Drawable?) {
         _resultListVisibility.value = View.VISIBLE
         _lyricsVisibility.value = View.GONE
