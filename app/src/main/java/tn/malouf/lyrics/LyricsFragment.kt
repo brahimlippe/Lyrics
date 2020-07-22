@@ -1,5 +1,6 @@
 package tn.malouf.lyrics
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.SearchManager
 import android.content.Context
@@ -56,6 +57,7 @@ class LyricsFragment : Fragment() {
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         Log.i("LyricsFragment", "onActivityCreated Called")
         super.onActivityCreated(savedInstanceState)
@@ -99,7 +101,7 @@ class LyricsFragment : Fragment() {
         binding.search.apply {
             setOnQueryTextListener(object : SearchView.OnQueryTextListener {
                 override fun onQueryTextSubmit(query: String?): Boolean {
-                    this@LyricsFragment.onQueryTextSubmit(query)
+                    onQueryTextSubmit()
                     return true
                 }
 
@@ -118,7 +120,6 @@ class LyricsFragment : Fragment() {
         }
         binding.lyricsScrollView.setOnTouchListener { _, event ->
             detector.onTouchEvent(event)
-            false
         }
     }
 
@@ -131,7 +132,7 @@ class LyricsFragment : Fragment() {
         viewModel.showSuggestionsList(binding.resultList.background)
     }
 
-    private fun onQueryTextSubmit(query: String?) {
+    private fun onQueryTextSubmit() {
         hideKeyboard(activity as Activity)
     }
 
