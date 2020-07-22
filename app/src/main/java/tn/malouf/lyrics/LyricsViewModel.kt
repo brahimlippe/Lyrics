@@ -1,6 +1,7 @@
 package tn.malouf.lyrics
 
 import android.graphics.drawable.Drawable
+import android.util.Log
 import android.view.View
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -27,6 +28,10 @@ class LyricsViewModel : ViewModel() {
     get() = _scale
 
     fun scaleLyricsText(newScale: Float) {
+        if (_scale.value == null) {
+            Log.e("LyricsViewModel", "scale live data cannot be null")
+            return
+        }
         _scale.value = newScale * _scale.value!!
     }
     fun showSuggestionsList(background: Drawable?) {

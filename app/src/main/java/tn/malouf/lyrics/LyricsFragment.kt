@@ -117,7 +117,6 @@ class LyricsFragment : Fragment() {
             }
         }
         binding.lyricsScrollView.setOnTouchListener { _, event ->
-            Log.i("LyricsFragment", "onTouchListener called")
             detector.onTouchEvent(event)
             false
         }
@@ -133,9 +132,6 @@ class LyricsFragment : Fragment() {
     }
 
     private fun onQueryTextSubmit(query: String?) {
-        if (query != null && query.compareTo("") != 0) {
-            this@LyricsFragment.handleSearch(query)
-        }
         hideKeyboard(activity as Activity)
     }
 
@@ -147,10 +143,6 @@ class LyricsFragment : Fragment() {
     }
 
     private fun showLyrics() {
-        Log.d(
-            "LyricsFragment",
-            "Lyrics changed to ${viewModel.lyrics.value?.substring(0, 50)}...etc"
-        )
         TransitionManager.beginDelayedTransition(binding.lyricsScrollView as ViewGroup)
         TransitionManager.beginDelayedTransition(binding.resultList as ViewGroup)
         var background: Drawable? = null
@@ -202,7 +194,10 @@ class LyricsFragment : Fragment() {
 
     private fun handleSearch(searchString: String) {
         try {
-            viewModel.listOfSongs.value = database.filterSongs(searchString)
+            val listOfSongs = database.filterSongs(searchString)
+            if (viewModel.listOfSongs.value != listOfSongs) {
+                viewModel.listOfSongs.value = listOfSongs
+            }
         } catch (e: Throwable) {
             showError(getString(R.string.database_connection_error))
             return
@@ -245,7 +240,6 @@ class LyricsFragment : Fragment() {
         }
 
         private fun hideKeyboard(activity: Activity) {
-            Log.i("LyricsFragment", "Hiding keyboard")
             val view: View = activity.currentFocus ?: View(activity.applicationContext)
             val imm =
                 activity.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager

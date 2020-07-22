@@ -56,7 +56,6 @@ class Database(databasePath: String) {
     }
 
     fun filterSongs(searchString: String): List<Song> {
-        Log.i("Database", "Updating song list")
         val result = mutableListOf<Song>()
         val cursor = database.query(
             "Song",
