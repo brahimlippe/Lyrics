@@ -120,6 +120,7 @@ class LyricsFragment : Fragment() {
         }
         binding.lyricsScrollView.setOnTouchListener { _, event ->
             detector.onTouchEvent(event)
+            false
         }
     }
 
