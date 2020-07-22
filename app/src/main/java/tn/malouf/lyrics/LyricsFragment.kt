@@ -8,9 +8,7 @@ import android.os.Bundle
 import android.transition.ChangeBounds
 import android.transition.TransitionManager
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.SearchView
 import android.widget.Toast
@@ -41,7 +39,21 @@ class LyricsFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         Log.i("LyricsFragment", "onCreateView Called")
+        setHasOptionsMenu(true)
         return inflater.inflate(R.layout.lyrics_fragment, container, false)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater.inflate(R.menu.overflow_menu, menu)
+        menu.findItem(R.id.about).setOnMenuItemClickListener {
+            val dialogFragment = AboutDialog()
+            dialogFragment.showNow(
+                requireActivity().supportFragmentManager,
+                "About Dialog"
+            )
+            true
+        }
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {

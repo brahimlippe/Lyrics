@@ -7,4 +7,6 @@
     <string name="remote_server" translatable="false">https://poetic-feelings.herokuapp.com/songs/</string>
     <string name="saved_songs_1">تم حفظ</string>
     <string name="saved_songs_2">أغنية جديدة</string>
+    <string name="about">من نحن</string>
+    <string name="dialog_text" translatable="false">brahim.pro@protonmail.com</string>
 </resources>
