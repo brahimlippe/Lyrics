@@ -6,7 +6,6 @@
     tools:context=".MainActivity">
 
     <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/fragment"
         android:name="tn.malouf.lyrics.LyricsFragment"
         android:layout_width="0dp"
         android:layout_height="wrap_content" />
