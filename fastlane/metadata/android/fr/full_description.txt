@@ -1,1 +1,3 @@
-Base de données des paroles des chansons traditionnelles Tunisiennes.
+Cette application mobile affiche cherche les paroles des chansons pour les choristes.
+Ca utilise une base de données faite maison. Cette base va être principalement utilisée pour les chansons traditionnelle tunisienne.
+La base de donnée va être accesible librement et ouverte aux conrtibutions de manière controlée.

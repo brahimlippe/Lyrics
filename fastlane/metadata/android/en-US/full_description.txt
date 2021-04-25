@@ -1,1 +1,4 @@
-Song lyrics database for tunisian traditional songs.
+This app looks for the lyrics of songs and disply them for the user.
+It uses a remote homebrew database that intends to contains primarly old Tunisian songs, but will be open to all types of songs.
+The database is hosted here for the moment: https://poetic-feelings.herokuapp.com/
+The database is intended to be accessed openly by anyone, and open to controlled contribution.
